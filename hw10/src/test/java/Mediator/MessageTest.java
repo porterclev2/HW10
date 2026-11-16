@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import Memento.MessageMemento;
 
 public class MessageTest {
 
@@ -70,5 +73,29 @@ public class MessageTest {
         assertEquals("[2026-11-12 09:30:00] Jade -> Kyle, Connor: Hi Kyle and Connor!", message.toString());
         assertEquals("[2026-11-12 09:30:00] Kyle -> Jade: Hey Jade!",
                 new Message(kyle, List.of(jade), "Hey Jade!", timestamp).toString());
+    }
+
+    @Test
+    public void testCreateMemento() {
+        MessageMemento memento = message.createMemento();
+        assertEquals("Hi Kyle and Connor!", memento.getContent());
+        assertEquals(timestamp, memento.getTimestamp());
+    }
+
+    @Test
+    public void testMatches() {
+        assertTrue(message.matches(jade, message.createMemento()));
+        assertTrue(message.matches(jade, new MessageMemento("Hi Kyle and Connor!", timestamp)));
+    }
+
+    @Test
+    public void testMatchesFailsForDifferentSender() {
+        assertFalse(message.matches(kyle, message.createMemento()));
+    }
+
+    @Test
+    public void testMatchesFailsForDifferentContentOrTimestamp() {
+        assertFalse(message.matches(jade, new MessageMemento("Hi Kyle!", timestamp)));
+        assertFalse(message.matches(jade, new MessageMemento("Hi Kyle and Connor!", timestamp.plusSeconds(1))));
     }
 }

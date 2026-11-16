@@ -3,16 +3,17 @@ package Mediator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Collections;
+import java.util.List;
+
+import Memento.MessageMemento;
 
 public class Message {
     private static DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private LocalDateTime timestamp;
 
     private User sender;
     private List<User> recipients;
-    
+    private LocalDateTime timestamp;
     private String content;
 
     public Message(User sender, List<User> recipients, String content) {
@@ -36,13 +37,23 @@ public class Message {
     public List<User> getRecipients() {
         return Collections.unmodifiableList(recipients);
     }
-    
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
     public String getContent() {
         return content;
     }
-    
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+
+    public MessageMemento createMemento() {
+        return new MessageMemento(content, timestamp);
+    }
+
+    public boolean matches(User sender, MessageMemento memento) {
+        return this.sender == sender
+                && content.equals(memento.getContent())
+                && timestamp.equals(memento.getTimestamp());
     }
 
     public static String formatTimestamp(LocalDateTime timestamp) {
