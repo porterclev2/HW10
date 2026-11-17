@@ -49,6 +49,22 @@ public class User {
         chatHistory.addMessage(message);
     }
 
+    public boolean removeMessage(User sender, MessageMemento memento) {
+        return chatHistory.removeMessage(sender, memento);
+    }
+
+    public boolean undoLastMessage() {
+        requireChatServer();
+        if (lastSentMessage == null) {
+            return false;
+        }
+        removeMessage(this, lastSentMessage);
+        chatServer.undoMessage(this, lastSentMessage);
+        Message previousMessage = chatHistory.getLastMessageSent();
+        lastSentMessage = previousMessage == null ? null : previousMessage.createMemento();
+        return true;
+    }
+
     public void blockUser(User user) {
         requireChatServer();
         chatServer.blockUser(this, user);

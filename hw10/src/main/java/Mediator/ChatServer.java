@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import Memento.MessageMemento;
+
 public class ChatServer {
     private List<User> users;
     private Map<User, Set<User>> blockedUsers;
@@ -55,6 +57,15 @@ public class ChatServer {
         for (User recipient : message.getRecipients()) {
             if (recipient != sender && isRegistered(recipient) && !isBlocked(recipient, sender)) {
                 recipient.receiveMessage(message);
+            }
+        }
+    }
+
+    public void undoMessage(User sender, MessageMemento memento) {
+        requireRegistered(sender);
+        for (User user : users) {
+            if (user != sender) {
+                user.removeMessage(sender, memento);
             }
         }
     }
