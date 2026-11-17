@@ -49,6 +49,16 @@ public class User {
         chatHistory.addMessage(message);
     }
 
+    public void blockUser(User user) {
+        requireChatServer();
+        chatServer.blockUser(this, user);
+    }
+
+    public void unblockUser(User user) {
+        requireChatServer();
+        chatServer.unblockUser(this, user);
+    }
+
     public void viewChatHistory() {
         System.out.println(chatHistory);
     }
