@@ -183,4 +183,57 @@ public class UserTest {
         assertThrows(IllegalStateException.class, () -> porter.blockUser(jade));
         assertThrows(IllegalStateException.class, () -> porter.unblockUser(jade));
     }
+
+    @Test
+    public void testRemoveMessage() {
+        Message message = new Message(kyle, List.of(jade), "Hey Jade!", timestamp);
+        jade.receiveMessage(message);
+        assertTrue(jade.removeMessage(kyle, message.createMemento()));
+        assertTrue(jade.getChatHistory().getMessages().isEmpty());
+        assertFalse(jade.removeMessage(kyle, message.createMemento()));
+    }
+
+    @Test
+    public void testUndoLastMessage() {
+        jade.sendMessage("This was meant for someone else", kyle, connor);
+        assertTrue(jade.undoLastMessage());
+        assertTrue(jade.getChatHistory().getMessages().isEmpty());
+        assertTrue(kyle.getChatHistory().getMessages().isEmpty());
+        assertTrue(connor.getChatHistory().getMessages().isEmpty());
+        assertNull(jade.getLastSentMessage());
+    }
+
+    @Test
+    public void testUndoLastMessageKeepsOtherMessages() {
+        Message received = kyle.sendMessage("Hey Jade!", jade);
+        jade.sendMessage("Oops", kyle);
+        jade.undoLastMessage();
+        assertEquals(List.of(received), jade.getChatHistory().getMessages());
+        assertEquals(List.of(received), kyle.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUndoLastMessageRestoresPreviousSentMessage() {
+        Message first = jade.sendMessage("First", kyle);
+        jade.sendMessage("Second", kyle);
+        assertTrue(jade.undoLastMessage());
+        assertEquals("First", jade.getLastSentMessage().getContent());
+        assertEquals(first.getTimestamp(), jade.getLastSentMessage().getTimestamp());
+        assertEquals(List.of(first), kyle.getChatHistory().getMessages());
+        assertTrue(jade.undoLastMessage());
+        assertTrue(kyle.getChatHistory().getMessages().isEmpty());
+        assertFalse(jade.undoLastMessage());
+    }
+
+    @Test
+    public void testUndoLastMessageWithNothingSentReturnsFalse() {
+        Message received = kyle.sendMessage("Hey Jade!", jade);
+        assertFalse(jade.undoLastMessage());
+        assertEquals(List.of(received), jade.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUndoLastMessageWhenNotRegisteredThrows() {
+        assertThrows(IllegalStateException.class, () -> new User("Porter").undoLastMessage());
+    }
 }

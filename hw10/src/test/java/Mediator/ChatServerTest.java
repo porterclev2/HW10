@@ -186,4 +186,39 @@ public class ChatServerTest {
         server.sendMessage(message);
         assertEquals(List.of(message), kyle.getChatHistory().getMessages());
     }
+
+    @Test
+    public void testUndoMessage() {
+        Message message = new Message(jade, List.of(kyle, connor), "Oops", timestamp);
+        server.sendMessage(message);
+        server.undoMessage(jade, message.createMemento());
+        assertTrue(kyle.getChatHistory().getMessages().isEmpty());
+        assertTrue(connor.getChatHistory().getMessages().isEmpty());
+    }
+
+    @Test
+    public void testUndoMessageDoesNotChangeSenderHistory() {
+        Message message = new Message(jade, List.of(kyle), "Oops", timestamp);
+        jade.receiveMessage(message);
+        server.undoMessage(jade, message.createMemento());
+        assertEquals(List.of(message), jade.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUndoMessageKeepsOtherMessages() {
+        Message keep = new Message(connor, List.of(kyle), "Hi Kyle!", timestamp);
+        Message undo = new Message(jade, List.of(kyle), "Oops", timestamp);
+        server.sendMessage(keep);
+        server.sendMessage(undo);
+        server.undoMessage(jade, undo.createMemento());
+        assertEquals(List.of(keep), kyle.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUndoMessageFromUnregisteredUserThrows() {
+        Message message = new Message(jade, List.of(kyle), "Oops", timestamp);
+        assertThrows(IllegalArgumentException.class, () -> {
+            server.undoMessage(new User("Porter"), message.createMemento());
+        });
+    }
 }
