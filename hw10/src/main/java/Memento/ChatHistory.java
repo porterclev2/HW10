@@ -2,12 +2,15 @@ package Memento;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import Iterator.IterableByUser;
+import Iterator.SearchMessagesByUser;
 import Mediator.Message;
 import Mediator.User;
 
-public class ChatHistory {
+public class ChatHistory implements IterableByUser {
     private User owner;
     private List<Message> messages;
 
@@ -45,6 +48,11 @@ public class ChatHistory {
             }
         }
         return null;
+    }
+
+    @Override
+    public Iterator<Message> iterator(User userToSearchWith) {
+        return new SearchMessagesByUser(this, userToSearchWith);
     }
 
     @Override

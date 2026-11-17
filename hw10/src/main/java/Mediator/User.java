@@ -1,11 +1,13 @@
 package Mediator;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
+import Iterator.IterableByUser;
 import Memento.ChatHistory;
 import Memento.MessageMemento;
 
-public class User {
+public class User implements IterableByUser {
     private String name;
     private ChatServer chatServer;
     private ChatHistory chatHistory;
@@ -77,6 +79,22 @@ public class User {
 
     public void viewChatHistory() {
         System.out.println(chatHistory);
+    }
+
+    @Override
+    public Iterator<Message> iterator(User userToSearchWith) {
+        return chatHistory.iterator(userToSearchWith);
+    }
+
+    public void viewChatHistoryWith(User user) {
+        System.out.println(name + "'s messages with " + user.getName() + ":");
+        Iterator<Message> messages = iterator(user);
+        if (!messages.hasNext()) {
+            System.out.println("No messages");
+        }
+        while (messages.hasNext()) {
+            System.out.println(messages.next());
+        }
     }
 
     private void requireChatServer() {
