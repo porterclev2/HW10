@@ -6,9 +6,10 @@ import Mediator.MessageTest;
 import Memento.MessageMementoTest;
 import Memento.ChatHistoryTest;
 import Mediator.ChatServerTest;
+import Iterator.SearchMessagesByUserTest;
 
 @Suite
-@SelectClasses({UserTest.class, MessageTest.class, MessageMementoTest.class, ChatHistoryTest.class, ChatServerTest.class})
+@SelectClasses({UserTest.class, MessageTest.class, MessageMementoTest.class, ChatHistoryTest.class, ChatServerTest.class, SearchMessagesByUserTest.class})
 public class CompleteUnitTest {
 
 }
