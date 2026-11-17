@@ -1,16 +1,20 @@
 package Memento;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import Iterator.IterableByUser;
+import Iterator.SearchMessagesByUser;
 import Mediator.Message;
 import Mediator.User;
 
@@ -97,5 +101,23 @@ public class ChatHistoryTest {
     @Test
     public void testToStringEmpty() {
         assertEquals("Jade's chat history is empty", chatHistory.toString());
+    }
+
+    @Test
+    public void testChatHistoryIsIterableByUser() {
+        assertInstanceOf(IterableByUser.class, chatHistory);
+    }
+
+    @Test
+    public void testIterator() {
+        Message fromConnor = new Message(connor, List.of(jade), "Hello Jade!", timestamp.plusMinutes(2));
+        chatHistory.addMessage(sent);
+        chatHistory.addMessage(received);
+        chatHistory.addMessage(fromConnor);
+        Iterator<Message> messages = chatHistory.iterator(connor);
+        assertInstanceOf(SearchMessagesByUser.class, messages);
+        assertSame(sent, messages.next());
+        assertSame(fromConnor, messages.next());
+        assertFalse(messages.hasNext());
     }
 }

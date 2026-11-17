@@ -3,17 +3,21 @@ package Mediator;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import Iterator.IterableByUser;
+import Iterator.SearchMessagesByUser;
 import Memento.MessageMemento;
 
 public class UserTest {
@@ -235,5 +239,39 @@ public class UserTest {
     @Test
     public void testUndoLastMessageWhenNotRegisteredThrows() {
         assertThrows(IllegalStateException.class, () -> new User("Porter").undoLastMessage());
+    }
+
+    @Test
+    public void testUserIsIterableByUser() {
+        assertInstanceOf(IterableByUser.class, jade);
+    }
+
+    @Test
+    public void testIterator() {
+        Message toKyle = jade.sendMessage("Hi Kyle!", kyle);
+        jade.sendMessage("Hi Connor!", connor);
+        Message fromKyle = kyle.sendMessage("Hey Jade!", jade);
+        Iterator<Message> messages = jade.iterator(kyle);
+        assertInstanceOf(SearchMessagesByUser.class, messages);
+        assertSame(toKyle, messages.next());
+        assertSame(fromKyle, messages.next());
+        assertFalse(messages.hasNext());
+    }
+
+    @Test
+    public void testViewChatHistoryWith() {
+        jade.receiveMessage(new Message(kyle, List.of(jade), "Hey Jade!", timestamp));
+        jade.receiveMessage(new Message(connor, List.of(jade), "Hello Jade!", timestamp));
+        assertEquals("Jade's messages with Kyle:" + System.lineSeparator()
+                + "[2026-11-12 09:30:00] Kyle -> Jade: Hey Jade!" + System.lineSeparator(),
+                captureOutput(() -> jade.viewChatHistoryWith(kyle)));
+    }
+
+    @Test
+    public void testViewChatHistoryWithNoMessages() {
+        jade.receiveMessage(new Message(connor, List.of(jade), "Hello Jade!", timestamp));
+        assertEquals("Jade's messages with Kyle:" + System.lineSeparator()
+                + "No messages" + System.lineSeparator(),
+                captureOutput(() -> jade.viewChatHistoryWith(kyle)));
     }
 }
