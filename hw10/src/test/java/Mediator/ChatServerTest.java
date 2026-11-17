@@ -2,6 +2,7 @@ package Mediator;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,5 +109,81 @@ public class ChatServerTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> server.sendMessage(message));
         assertEquals("Porter is not registered with this chat server", exception.getMessage());
         assertTrue(jade.getChatHistory().getMessages().isEmpty());
+    }
+
+    @Test
+    public void testBlockUser() {
+        server.blockUser(kyle, connor);
+        assertTrue(server.isBlocked(kyle, connor));
+        assertFalse(server.isBlocked(connor, kyle));
+        assertFalse(server.isBlocked(jade, connor));
+    }
+
+    @Test
+    public void testBlockedUserMessagesAreNotDelivered() {
+        server.blockUser(kyle, connor);
+        Message message = new Message(connor, List.of(kyle, jade), "Kyle, can you see this?", timestamp);
+        server.sendMessage(message);
+        assertTrue(kyle.getChatHistory().getMessages().isEmpty());
+        assertEquals(List.of(message), jade.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testBlockerCanStillMessageBlockedUser() {
+        server.blockUser(kyle, connor);
+        Message message = new Message(kyle, List.of(connor), "I blocked you", timestamp);
+        server.sendMessage(message);
+        assertEquals(List.of(message), connor.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUnblockUser() {
+        server.blockUser(kyle, connor);
+        server.unblockUser(kyle, connor);
+        assertFalse(server.isBlocked(kyle, connor));
+        Message message = new Message(connor, List.of(kyle), "Kyle, how about now?", timestamp);
+        server.sendMessage(message);
+        assertEquals(List.of(message), kyle.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUnblockUserThatWasNotBlocked() {
+        server.unblockUser(jade, kyle);
+        assertFalse(server.isBlocked(jade, kyle));
+    }
+
+    @Test
+    public void testGetBlockedUsers() {
+        assertTrue(server.getBlockedUsers(kyle).isEmpty());
+        server.blockUser(kyle, connor);
+        server.blockUser(kyle, jade);
+        assertEquals(Set.of(connor, jade), server.getBlockedUsers(kyle));
+        assertThrows(UnsupportedOperationException.class, () -> server.getBlockedUsers(kyle).add(kyle));
+    }
+
+    @Test
+    public void testBlockSelfThrows() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> server.blockUser(kyle, kyle));
+        assertEquals("Kyle cannot block themselves", exception.getMessage());
+    }
+
+    @Test
+    public void testBlockUnregisteredUserThrows() {
+        User porter = new User("Porter");
+        assertThrows(IllegalArgumentException.class, () -> server.blockUser(kyle, porter));
+        assertThrows(IllegalArgumentException.class, () -> server.blockUser(porter, kyle));
+    }
+
+    @Test
+    public void testUnregisterUserClearsBlocks() {
+        server.blockUser(kyle, connor);
+        server.blockUser(connor, kyle);
+        server.unregisterUser(connor);
+        assertTrue(server.getBlockedUsers(kyle).isEmpty());
+        assertFalse(server.isBlocked(connor, kyle));
+        server.registerUser(connor);
+        Message message = new Message(connor, List.of(kyle), "I'm back", timestamp);
+        server.sendMessage(message);
+        assertEquals(List.of(message), kyle.getChatHistory().getMessages());
     }
 }

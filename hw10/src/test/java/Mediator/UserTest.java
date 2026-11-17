@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -156,5 +157,30 @@ public class UserTest {
     public void testViewEmptyChatHistory() {
         assertEquals("Jade's chat history is empty" + System.lineSeparator(),
                 captureOutput(jade::viewChatHistory));
+    }
+
+    @Test
+    public void testBlockUser() {
+        kyle.blockUser(connor);
+        assertTrue(server.isBlocked(kyle, connor));
+        Message message = connor.sendMessage("Kyle, can you see this?", kyle, jade);
+        assertTrue(kyle.getChatHistory().getMessages().isEmpty());
+        assertEquals(List.of(message), jade.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testUnblockUser() {
+        kyle.blockUser(connor);
+        kyle.unblockUser(connor);
+        assertFalse(server.isBlocked(kyle, connor));
+        Message message = connor.sendMessage("Kyle, how about now?", kyle);
+        assertEquals(List.of(message), kyle.getChatHistory().getMessages());
+    }
+
+    @Test
+    public void testBlockUserWhenNotRegisteredThrows() {
+        User porter = new User("Porter");
+        assertThrows(IllegalStateException.class, () -> porter.blockUser(jade));
+        assertThrows(IllegalStateException.class, () -> porter.unblockUser(jade));
     }
 }
